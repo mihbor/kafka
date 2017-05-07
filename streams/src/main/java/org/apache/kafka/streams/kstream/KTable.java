@@ -26,6 +26,7 @@ import org.apache.kafka.streams.kstream.internals.WindowedSerializer;
 import org.apache.kafka.streams.kstream.internals.WindowedStreamPartitioner;
 import org.apache.kafka.streams.processor.StateStoreSupplier;
 import org.apache.kafka.streams.processor.StreamPartitioner;
+import org.apache.kafka.streams.processor.TypedStateStoreSupplier;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.QueryableStoreType;
 import org.apache.kafka.streams.state.ReadOnlyKeyValueStore;
@@ -160,7 +161,7 @@ public interface KTable<K, V> {
      * @return a {@code KTable} that contains only those records that satisfy the given predicate
      * @see #filterNot(Predicate)
      */
-    KTable<K, V> filter(final Predicate<? super K, ? super V> predicate, final StateStoreSupplier<KeyValueStore> storeSupplier);
+    KTable<K, V> filter(final Predicate<? super K, ? super V> predicate, final TypedStateStoreSupplier<KeyValueStore<K, V>> storeSupplier);
 
     /**
      * Create a new {@code KTable} that consists all records of this {@code KTable} which do <em>not</em> satisfy the
@@ -216,7 +217,7 @@ public interface KTable<K, V> {
      * @return a {@code KTable} that contains only those records that do <em>not</em> satisfy the given predicate
      * @see #filter(Predicate)
      */
-    KTable<K, V> filterNot(final Predicate<? super K, ? super V> predicate, final StateStoreSupplier<KeyValueStore> storeSupplier);
+    KTable<K, V> filterNot(final Predicate<? super K, ? super V> predicate, final TypedStateStoreSupplier<KeyValueStore<K, V>> storeSupplier);
 
     /**
      * Create a new {@code KTable} that consists all records of this {@code KTable} which do <em>not</em> satisfy the
@@ -379,7 +380,7 @@ public interface KTable<K, V> {
      */
     <VR> KTable<K, VR> mapValues(final ValueMapper<? super V, ? extends VR> mapper,
                                  final Serde<VR> valueSerde,
-                                 final StateStoreSupplier<KeyValueStore> storeSupplier);
+                                 final TypedStateStoreSupplier<KeyValueStore<K, VR>> storeSupplier);
 
 
     /**
@@ -662,7 +663,7 @@ public interface KTable<K, V> {
      * @return a {@code KTable} that contains the exact same (and potentially repartitioned) records as this {@code KTable}
      */
     KTable<K, V> through(final String topic,
-                         final StateStoreSupplier<KeyValueStore> storeSupplier);
+                         final TypedStateStoreSupplier<KeyValueStore<K, V>> storeSupplier);
 
     /**
      * Materialize this changelog stream to a topic and creates a new {@code KTable} from the topic using default
@@ -747,7 +748,7 @@ public interface KTable<K, V> {
      */
     KTable<K, V> through(final StreamPartitioner<? super K, ? super V> partitioner,
                          final String topic,
-                         final StateStoreSupplier<KeyValueStore> storeSupplier);
+                         final TypedStateStoreSupplier<KeyValueStore<K, V>> storeSupplier);
 
     /**
      * Materialize this changelog stream to a topic and creates a new {@code KTable} from the topic.
@@ -800,7 +801,7 @@ public interface KTable<K, V> {
      */
     KTable<K, V> through(final Serde<K> keySerde, Serde<V> valSerde,
                          final String topic,
-                         final StateStoreSupplier<KeyValueStore> storeSupplier);
+                         final TypedStateStoreSupplier<KeyValueStore<K, V>> storeSupplier);
 
     /**
      * Materialize this changelog stream to a topic and creates a new {@code KTable} from the topic.
@@ -887,7 +888,7 @@ public interface KTable<K, V> {
                          final Serde<V> valSerde,
                          final StreamPartitioner<? super K, ? super V> partitioner,
                          final String topic,
-                         final StateStoreSupplier<KeyValueStore> storeSupplier);
+                         final TypedStateStoreSupplier<KeyValueStore<K, V>> storeSupplier);
 
     /**
      * Materialize this changelog stream to a topic and creates a new {@code KTable} from the topic using a customizable
@@ -1272,7 +1273,7 @@ public interface KTable<K, V> {
      */
     <VO, VR> KTable<K, VR> join(final KTable<K, VO> other,
                                 final ValueJoiner<? super V, ? super VO, ? extends VR> joiner,
-                                final StateStoreSupplier<KeyValueStore> storeSupplier);
+                                final TypedStateStoreSupplier<KeyValueStore<K, VR>> storeSupplier);
 
 
     /**
@@ -1528,7 +1529,7 @@ public interface KTable<K, V> {
      */
     <VO, VR> KTable<K, VR> leftJoin(final KTable<K, VO> other,
                                     final ValueJoiner<? super V, ? super VO, ? extends VR> joiner,
-                                    final StateStoreSupplier<KeyValueStore> storeSupplier);
+                                    final TypedStateStoreSupplier<KeyValueStore<K, VR>> storeSupplier);
 
 
     /**
@@ -1781,7 +1782,7 @@ public interface KTable<K, V> {
      */
     <VO, VR> KTable<K, VR> outerJoin(final KTable<K, VO> other,
                                      final ValueJoiner<? super V, ? super VO, ? extends VR> joiner,
-                                     final StateStoreSupplier<KeyValueStore> storeSupplier);
+                                     final TypedStateStoreSupplier<KeyValueStore<K, VR>> storeSupplier);
 
     /**
      * Get the name of the local state store used that can be used to query this {@code KTable}.

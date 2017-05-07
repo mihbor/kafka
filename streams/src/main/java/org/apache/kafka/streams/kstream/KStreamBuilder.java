@@ -29,6 +29,7 @@ import org.apache.kafka.streams.kstream.internals.KTableSourceValueGetterSupplie
 import org.apache.kafka.streams.processor.ProcessorSupplier;
 import org.apache.kafka.streams.processor.StateStoreSupplier;
 import org.apache.kafka.streams.processor.TopologyBuilder;
+import org.apache.kafka.streams.processor.TypedStateStoreSupplier;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.QueryableStoreType;
 import org.apache.kafka.streams.state.internals.RocksDBKeyValueStoreSupplier;
@@ -297,7 +298,7 @@ public class KStreamBuilder extends TopologyBuilder {
      * @return a {@link KTable} for the specified topic
      */
     public <K, V> KTable<K, V> table(final String topic,
-                                     final StateStoreSupplier<KeyValueStore> storeSupplier) {
+                                     final TypedStateStoreSupplier<KeyValueStore<K, V>> storeSupplier) {
         return table(null, null, null, topic, storeSupplier);
     }
 
@@ -390,7 +391,7 @@ public class KStreamBuilder extends TopologyBuilder {
      */
     public <K, V> KTable<K, V> table(final AutoOffsetReset offsetReset,
                                      final String topic,
-                                     final StateStoreSupplier<KeyValueStore> storeSupplier) {
+                                     final TypedStateStoreSupplier<KeyValueStore<K, V>> storeSupplier) {
         return table(offsetReset, null, null, topic, storeSupplier);
     }
 
@@ -491,7 +492,7 @@ public class KStreamBuilder extends TopologyBuilder {
     public <K, V> KTable<K, V> table(final Serde<K> keySerde,
                                      final Serde<V> valSerde,
                                      final String topic,
-                                     final StateStoreSupplier<KeyValueStore> storeSupplier) {
+                                     final TypedStateStoreSupplier<KeyValueStore<K, V>> storeSupplier) {
         return table(null, keySerde, valSerde, topic, storeSupplier);
     }
 
@@ -525,7 +526,7 @@ public class KStreamBuilder extends TopologyBuilder {
                                         final Serde<K> keySerde,
                                         final Serde<V> valSerde,
                                         final String topic,
-                                        final StateStoreSupplier<KeyValueStore> storeSupplier,
+                                        final TypedStateStoreSupplier<KeyValueStore<K, V>> storeSupplier,
                                         final boolean isQueryable) {
         final String source = newName(KStreamImpl.SOURCE_NAME);
         final String name = newName(KTableImpl.SOURCE_NAME);
@@ -583,7 +584,7 @@ public class KStreamBuilder extends TopologyBuilder {
                                      final String topic,
                                      final String queryableStoreName) {
         final String internalStoreName = queryableStoreName != null ? queryableStoreName : newStoreName(KTableImpl.SOURCE_NAME);
-        final StateStoreSupplier storeSupplier = new RocksDBKeyValueStoreSupplier<>(internalStoreName,
+        final TypedStateStoreSupplier<KeyValueStore<K, V>> storeSupplier = new RocksDBKeyValueStoreSupplier<>(internalStoreName,
                 keySerde,
                 valSerde,
                 false,
@@ -657,7 +658,7 @@ public class KStreamBuilder extends TopologyBuilder {
                                      final Serde<K> keySerde,
                                      final Serde<V> valSerde,
                                      final String topic,
-                                     final StateStoreSupplier<KeyValueStore> storeSupplier) {
+                                     final TypedStateStoreSupplier<KeyValueStore<K, V>> storeSupplier) {
         Objects.requireNonNull(storeSupplier, "storeSupplier can't be null");
         return doTable(offsetReset, keySerde, valSerde, topic, storeSupplier, true);
     }
@@ -788,14 +789,14 @@ public class KStreamBuilder extends TopologyBuilder {
     public <K, V> GlobalKTable<K, V> globalTable(final Serde<K> keySerde,
                                                  final Serde<V> valSerde,
                                                  final String topic,
-                                                 final StateStoreSupplier<KeyValueStore> storeSupplier) {
+                                                 final TypedStateStoreSupplier<KeyValueStore<K, V>> storeSupplier) {
         return doGlobalTable(keySerde, valSerde, topic, storeSupplier);
     }
 
     private <K, V> GlobalKTable<K, V> doGlobalTable(final Serde<K> keySerde,
                                                     final Serde<V> valSerde,
                                                     final String topic,
-                                                    final StateStoreSupplier<KeyValueStore> storeSupplier) {
+                                                    final TypedStateStoreSupplier<KeyValueStore<K, V>> storeSupplier) {
         Objects.requireNonNull(storeSupplier, "storeSupplier can't be null");
         final String sourceName = newName(KStreamImpl.SOURCE_NAME);
         final String processorName = newName(KTableImpl.SOURCE_NAME);
@@ -805,7 +806,7 @@ public class KStreamBuilder extends TopologyBuilder {
         final Deserializer<K> keyDeserializer = keySerde == null ? null : keySerde.deserializer();
         final Deserializer<V> valueDeserializer = valSerde == null ? null : valSerde.deserializer();
 
-        addGlobalStore(storeSupplier, sourceName, keyDeserializer, valueDeserializer, topic, processorName, tableSource);
+        addGlobalStore((StateStoreSupplier) storeSupplier, sourceName, keyDeserializer, valueDeserializer, topic, processorName, tableSource);
         return new GlobalKTableImpl(new KTableSourceValueGetterSupplier<>(storeSupplier.name()));
     }
 
